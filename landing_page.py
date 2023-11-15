@@ -34,7 +34,7 @@ def show_home_page():
     st.session_state['page'] = 'home'
 
 def show_profile_page():
-    st.session_state['page'] = 'profile'
+    st.session_state['page'] = 'profilee'
 
 # Initialize session state
 if 'page' not in st.session_state:
