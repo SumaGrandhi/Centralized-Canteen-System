@@ -57,20 +57,22 @@ with top_bar:
             st.session_state['page'] = 'sign_in'
 
 # Display content based on the current page
-if st.session_state['page'] == 'sign_in':
+def show_register_page():
     st.write("Register page content here")
-elif st.session_state['page'] == 'register':
+    if st.session_state['page'] == 'sign_in':
+        st.write("Register page content here")
+    elif st.session_state['page'] == 'register':
     # Sign In form in the center
-    with st.container():
-        st.markdown("<div class='form-container'>", unsafe_allow_html=True)
-        st.markdown("<div class='form-style'>", unsafe_allow_html=True)
-        email = st.text_input("email", key="email")
-        first_name = st.text_input("first_name",key="first_name")
-        last_name = st.text_input("last_name", key="last_name")
-        username = st.text_input("Username", key="username")
-        password = st.text_input("Password", type="password", key="password")
-        if st.button('Register'):
-            # Authentication logic goes here
-            st.write("Sign In logic not implemented.")
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container():
+                st.markdown("<div class='form-container'>", unsafe_allow_html=True)
+                st.markdown("<div class='form-style'>", unsafe_allow_html=True)
+                email = st.text_input("email", key="email")
+                first_name = st.text_input("first_name",key="first_name")
+                last_name = st.text_input("last_name", key="last_name")
+                username = st.text_input("Username", key="username")
+                password = st.text_input("Password", type="password", key="password")
+                if st.button('Register'):
+                    # Authentication logic goes here
+                    st.write("Sign In logic not implemented.")
+                st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)

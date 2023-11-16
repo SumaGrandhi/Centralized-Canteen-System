@@ -22,41 +22,40 @@ def set_bg_image_and_styles():
         """,
         unsafe_allow_html=True
     )
+
 import streamlit as st
 import pymysql  # or import psycopg2 for PostgreSQL
 
-# Database connection details (update with your database information)
-db_host = 'localhost'
-db_user = 'root'
-db_password = 'vid18par10@'
-db_name = 'centralised_canteen_system'
+def show_booking_page():
+    db_host = 'localhost'
+    db_user = 'root'
+    db_password = 'vid18par10@'  # Replace with your actual password
+    db_name = 'centralised_canteen_system'
 
-# Establishing a connection to the database
-conn = pymysql.connect(
-    host=db_host,
-    user=db_user,
-    password=db_password,
-    db=db_name
-)
+    # Establishing a connection to the database
+    conn = pymysql.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        db=db_name
+    )
 
-def get_all_items():
-    """ Fetch all item IDs, Names, Prices, and Available Quantities from the database """
-    with conn.cursor() as cursor:
+    def get_all_items(cursor):
+        """ Fetch all item IDs, Names, Prices, and Available Quantities from the database """
         sql = "SELECT ItemID, Name, Price, Quantity FROM Items"
         cursor.execute(sql)
         result = cursor.fetchall()
         return result
 
-def main():
-    """ Main function to run the Streamlit app """
-    st.title("Item Selection and Billing")
+    with conn.cursor() as cursor:
+        all_items = get_all_items(cursor)
+        item_dict = {item[0]: (item[1], item[2], item[3]) for item in all_items}
 
-    # Fetching all items to display in checklist
-    all_items = get_all_items()
-    item_dict = {item[0]: (item[1], item[2], item[3]) for item in all_items}  # Creating a dict of ItemID: (Name, Price, Quantity)
-
-    # User selects items from the checklist
-    selected_item_ids = st.multiselect("Select Items", options=list(item_dict.keys()), format_func=lambda x: f"{item_dict[x][0]} - ${item_dict[x][1]} - Available: {item_dict[x][2]}")
+    selected_item_ids = st.multiselect(
+        "Select Items", 
+        options=list(item_dict.keys()), 
+        format_func=lambda x: f"{item_dict[x][0]} - ${item_dict[x][1]} - Available: {item_dict[x][2]}"
+    )
 
     if selected_item_ids:
         st.write("Selected Items, Quantities, and Total Price:")
@@ -67,8 +66,12 @@ def main():
             total_price_for_item = item_dict[item_id][1] * qty
             total_bill += total_price_for_item
             st.write(f"{item_dict[item_id][0]}: ${item_dict[item_id][1]} x {qty} = ${total_price_for_item:.2f}")
-        
+
         st.write(f"Total Bill Amount: ${total_bill:.2f}")
 
-if __name__ == "__main__":
-    main()
+    conn.close()
+
+# The main function would now be redundant if you are using navigation
+# So you can remove the main function or adjust it to your app's navigation logic
+# if __name__ == "__main__":
+#     main()

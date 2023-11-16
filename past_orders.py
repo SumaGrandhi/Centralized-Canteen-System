@@ -25,23 +25,22 @@ def set_bg_image_and_styles():
 import streamlit as st
 import pymysql  # or import psycopg2 for PostgreSQL
 
-# Database connection details (update with your database information)
-db_host = 'localhost'
-db_user = 'root'
-db_password = 'vid18par10@'
-db_name = 'centralised_canteen_system'
+def show_past_orders_page():
+    db_host = 'localhost'
+    db_user = 'root'
+    db_password = 'vid18par10@'  # Replace with your actual password
+    db_name = 'centralised_canteen_system'
 
-# Establishing a connection to the database
-conn = pymysql.connect(
-    host=db_host,
-    user=db_user,
-    password=db_password,
-    db=db_name
-)
+    # Establishing a connection to the database
+    conn = pymysql.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        db=db_name
+    )
 
-def get_past_orders(customer_id):
-    """ Fetch past orders for the given customer ID """
-    with conn.cursor() as cursor:
+    def get_past_orders(cursor, customer_id):
+        """ Fetch past orders for the given customer ID """
         sql = """
         SELECT o.OrderID, o.Cooking_Time, o.Price, i.Name, e.Name
         FROM Orders o
@@ -53,21 +52,23 @@ def get_past_orders(customer_id):
         result = cursor.fetchall()
         return result
 
-def main():
-    """ Main function to run the Streamlit app """
     st.title("Past Orders")
 
     # User input for Customer ID
     customer_id = st.number_input("Enter Your Customer ID", min_value=1, step=1)
 
     if st.button("Show Past Orders"):
-        past_orders = get_past_orders(customer_id)
-        if past_orders:
-            st.write("Past Orders:")
-            for order in past_orders:
-                st.write(f"Order ID: {order[0]}, Item: {order[3]}, Price: ${order[2]}, Cooking Time: {order[1]} mins, Handled by: {order[4]}")
-        else:
-            st.error("No past orders found for this Customer ID.")
+        with conn.cursor() as cursor:
+            past_orders = get_past_orders(cursor, customer_id)
+            if past_orders:
+                st.write("Past Orders:")
+                for order in past_orders:
+                    st.write(f"Order ID: {order[0]}, Item: {order[3]}, Price: ${order[2]}, Cooking Time: {order[1]} mins, Handled by: {order[4]}")
+            else:
+                st.error("No past orders found for this Customer ID.")
 
-if __name__ == "__main__":
-    main()
+    conn.close()
+
+# Remove the main function if it is now part of a larger Streamlit app with navigation.
+# if __name__ == "__main__":
+#     main()
