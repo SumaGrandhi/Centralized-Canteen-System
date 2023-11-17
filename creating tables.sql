@@ -66,6 +66,19 @@ CREATE TABLE Feedback (
   FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
 );
 
+CREATE TABLE User (
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  email VARCHAR(255) UNIQUE,
+  username VARCHAR(255) UNIQUE,
+  password VARCHAR(255)
+);
+
+INSERT INTO User (first_name, last_name, email, username, password) VALUES 
+('Alice', 'Smith', 'alice.smith@example.com', 'alice123', 'password1'),
+('Bob', 'Johnson', 'bob.johnson@example.com', 'bobj', 'password2'),
+('Carol', 'Williams', 'carol.williams@example.com', 'carolw', 'password3');
+
 -- Insert relationships and data here, if necessary.
 INSERT INTO Employee (EmployeeID, Name, Gender, Phone_Number, Address, Designation, Date_of_Birth) VALUES 
 (1, 'John Doe', 'Male', '123-456-7890', '123 Street, City', 'Chef', '1980-01-01'),

@@ -4,7 +4,7 @@ import mysql.connector
 def show_past_orders_page():
     db_host = 'localhost'
     db_user = 'root'
-    db_password = 'sqlroot321#'  # Replace with your actual password
+    db_password = 'sqlroot321#'  
     db_name = 'centralised_canteen_system'
 
     # Establishing a connection to the database
@@ -14,7 +14,7 @@ def show_past_orders_page():
         password=db_password,
         db=db_name
     )
-
+    cursor = conn.cursor()
     def get_past_orders(cursor, customer_id):
         """ Fetch past orders for the given customer ID """
         sql = """
