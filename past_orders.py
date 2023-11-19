@@ -2,6 +2,7 @@ import streamlit as st
 import mysql.connector
 
 def show_past_orders_page():
+    user_id = st.session_state.get('user_id')
     db_host = 'localhost'
     db_user = 'root'
     db_password = 'sqlroot321#'  
@@ -16,6 +17,7 @@ def show_past_orders_page():
     )
     cursor = conn.cursor()
     def get_past_orders(cursor, customer_id):
+        user_id = st.session_state.get('user_id')
         """ Fetch past orders for the given customer ID """
         sql = """
         SELECT o.OrderID, o.Cooking_Time, o.Price, i.Name, e.Name

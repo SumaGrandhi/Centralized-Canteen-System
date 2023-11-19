@@ -1,7 +1,7 @@
 import streamlit as st
 
 def show_feedback_page():
-
+    user_id = st.session_state.get('user_id')
     # Display content for feedback
     with st.container():
         st.markdown("<div class='form-container'>", unsafe_allow_html=True)
