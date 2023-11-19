@@ -1,3 +1,5 @@
+drop database centralised_canteen_system;
+create database centralised_canteen_system;
 use centralised_canteen_system;
 drop table if exists Employee;
 drop table if exists Items;
@@ -43,28 +45,39 @@ CREATE TABLE Items (
   FOREIGN KEY (VendorID) REFERENCES Vendor(VendorID)
 );
 
+CREATE TABLE User (
+  UserID INT AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  email VARCHAR(255) UNIQUE,
+  username VARCHAR(255) UNIQUE,
+  password VARCHAR(255)
+);
+
 CREATE TABLE Orders (
-  OrderID INT PRIMARY KEY,
+  OrderID INT AUTO_INCREMENT PRIMARY KEY,
   CustomerID INT,
   ItemID INT,
-  Cooking_Time INT,
+  Quantity INT,
   Price DECIMAL(10, 2),
-  EmployeeID INT,
-  FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
-  FOREIGN KEY (ItemID) REFERENCES Items(ItemID),
-  FOREIGN KEY (EmployeeID) REFERENCES Employee(EmployeeID)
+  FOREIGN KEY (CustomerID) REFERENCES User(UserID),
+  FOREIGN KEY (ItemID) REFERENCES Items(ItemID)
 );
 
 CREATE TABLE Feedback (
-  FeedbackID INT PRIMARY KEY,
+  FeedbackID INT AUTO_INCREMENT PRIMARY KEY,
   CustomerID INT,
   Comments TEXT,
-  Quality_of_Service INT,
   Rating INT,
-  OrderID INT,
-  FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
-  FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+  FOREIGN KEY (CustomerID) REFERENCES User(UserID)
 );
+
+
+
+INSERT INTO User (first_name, last_name, email, username, password) VALUES 
+('Alice', 'Smith', 'alice.smith@example.com', 'alice123', 'password1'),
+('Bob', 'Johnson', 'bob.johnson@example.com', 'bobj', 'password2'),
+('Carol', 'Williams', 'carol.williams@example.com', 'carolw', 'password3');
 
 -- Insert relationships and data here, if necessary.
 INSERT INTO Employee (EmployeeID, Name, Gender, Phone_Number, Address, Designation, Date_of_Birth) VALUES 
@@ -90,13 +103,24 @@ INSERT INTO Items (ItemID, VendorID, Name, Price, Quantity, Cooking_Time) VALUES
 (4, 1, 'Espresso', 2.50, 80, 3);
 
 
-INSERT INTO Orders (OrderID, CustomerID, ItemID, Cooking_Time, Price, EmployeeID) VALUES 
-(1, 1, 1, 5, 3.50, 1),
-(2, 2, 2, 10, 2.00, 2),
-(3, 1, 3, 7, 4.00, 1),
-(4, 3, 4, 3, 2.50, 2);
 
-INSERT INTO Feedback (FeedbackID, CustomerID, Comments, Quality_of_Service, Rating, OrderID) VALUES 
-(1, 1, 'Great coffee!', 5, 4, 1),
-(2, 2, 'Delicious croissant, but a bit too flaky.', 4, 3, 2),
-(3, 3, 'The sandwich was okay.', 3, 3, 3);
+DROP TRIGGER IF EXISTS AfterOrderInsert;
+DELIMITER //
+
+CREATE TRIGGER  AfterOrderInsert
+AFTER INSERT ON Orders
+FOR EACH ROW
+BEGIN
+    UPDATE Items
+    SET Quantity = Quantity - NEW.Quantity
+    WHERE ItemID = NEW.ItemID;
+END; //
+
+DELIMITER ;
+
+select * from Users;
+
+
+
+
+

@@ -1,38 +1,23 @@
 import streamlit as st
-import profilee
-# Function to set the background image
+import booking as bk
+import past_orders as po
+import feedback as fp
+import mysql.connector
 
-def set_bg_image_and_styles():
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-image: url("https://images.unsplash.com/photo-1512389098783-66b81f86e199?q=80&w=1828");
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        .header {
-            text-align: center;
-            font-size: 5.5em;
-            margin-top: 200px; 
-            color : Black;
-        }
-        /* Additional styles for buttons if needed */
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+db_host = 'localhost'
+db_user = 'root'
+db_password = 'vid18par10@'  
+db_name = 'centralised_canteen_system'
 
-# # Functions to display different pages
-# def show_signup_page():
-#     st.session_state['page'] = 'signup'
-
-# def show_register_page():
-#     st.session_state['page'] = 'register'
+conn = mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        db=db_name
+)
+cursor = conn.cursor()
 
 def show_home_page():
-    # Custom styles
     st.markdown("""
         <style>
         .welcome-message {
@@ -55,91 +40,73 @@ def show_home_page():
         }
         </style>
     """, unsafe_allow_html=True)
-
-    # Welcome message
     st.markdown('<div class="welcome-message">Welcome to Our Café!</div>', unsafe_allow_html=True)
-    
-    # You can use an image as a background or decoration
-    #st.image('', use_column_width=True, caption='Enjoy our cozy atmosphere.')
-
-    # Add any other widgets or text you want on your homepage
     st.write("Explore our menu and make orders easily with our app.")
 
+def authenticate_user(username, password):
+    # Establish a new database connection inside the function
+    conn = mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        db=db_name
+    )
+    cursor = conn.cursor()
     
+    query = "SELECT UserID FROM User WHERE username = %s AND password = %s"
+    cursor.execute(query, (username, password))
+    result = cursor.fetchone()
+    cursor.close()  # Close the cursor after you're done with it
+    conn.close()  # Close the connection after you're done with it
 
-# def show_profile_page():
-#     st.session_state['page'] = 'profilee'
+    if result:
+        userid = result[0]
+        return True, userid
+    else:
+        return False, None
 
-# # Initialize session state
-# if 'page' not in st.session_state:
-#     st.session_state['page'] = 'home'
 
-# # Set background
-# set_bg_image_and_styles()
-
-# # Create a top bar for the header and buttons
-# top_bar = st.container()
-# st.markdown('<div class="header">CANTEEN ORDERS</div>', unsafe_allow_html=True)
-# with top_bar:
-#     col1, col2, col3 = st.columns([1, 0.2, 0.2])
-#     with col2:
-#         if st.button('Sign Up'):
-#             show_signup_page()
-#     with col3:
-#         if st.button('Register'):
-#             show_register_page()
-
-# # Display content based on the current page
-# if st.session_state['page'] == 'signup':
-#     with st.container():
-#         st.markdown("<div class='form-container'>", unsafe_allow_html=True)
-#         st.markdown("<div class='form-style'>", unsafe_allow_html=True)
-#         username = st.text_input("Username", key="username")
-#         password = st.text_input("Password", type="password", key="password")
-#         if st.button('Sign In'):
-#             # Authentication logic goes here
-#             st.write("Sign In logic not implemented.")
-#         st.markdown("</div>", unsafe_allow_html=True)
-#         st.markdown("</div>", unsafe_allow_html=True)
-#     if st.button('Back to Home'):
-#         show_home_page()
-# elif st.session_state['page'] == 'register':
-#     # Sign In form in the center
-#     with st.container():
-#         st.markdown("<div class='form-container'>", unsafe_allow_html=True)
-#         st.markdown("<div class='form-style'>", unsafe_allow_html=True)
-#         email = st.text_input("email", key="email")
-#         first_name = st.text_input("first_name",key="first_name")
-#         last_name = st.text_input("last_name", key="last_name")
-#         username = st.text_input("Username", key="username")
-#         password = st.text_input("Password", type="password", key="password")
-#         if st.button(' Register'):
-#             # Authentication logic goes here
-#             show_profile_page()
-#         st.markdown("</div>", unsafe_allow_html=True)
-#         st.markdown("</div>", unsafe_allow_html=True)
-#     #if st.session_state['page'] == 'sign_in':
-#         #st.write("Register page content here")
-#     if st.button('Back to Home'):
-#         show_home_page()
-
-import streamlit as st
-import pymysql
 def show_signin_page():
+    # Check if we need to reset the form and clear session state
+    if 'reset_signin_form' in st.session_state and st.session_state['reset_signin_form']:
+        for key in ['signin_username', 'signin_password']:
+            st.session_state[key] = ''
+        st.session_state['reset_signin_form'] = False  # Reset the flag
+
+
     with st.container():
         st.markdown("<div class='form-container'>", unsafe_allow_html=True)
         st.markdown("<div class='form-style'>", unsafe_allow_html=True)
-        username = st.text_input("Username", key="username")
-        password = st.text_input("Password", type="password", key="password")
-        if st.button('Sign In'):
-            # Authentication logic goes here
-            st.write("Sign In logic not implemented.")
-            import profilee
+        username = st.text_input("Username", value="", key="signin_username")
+        password = st.text_input("Password", type="password", value="", key="signin_password")
+        if st.button('Sign In', key="signin_button"):
+            val, userid = authenticate_user(username, password)
+            if val:
+                st.session_state['user_signed_in'] = True
+                st.session_state['user_id'] = userid  # Make sure userid is not None here
+                st.experimental_rerun()
+            else:
+                st.error("Authentication failed. Please try again.")
+                st.session_state['reset_signin_form'] = True
+
+
         st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
+    # Initialize the reset flag in session state
+    if 'reset_signin_form' not in st.session_state:
+        st.session_state['reset_signin_form'] = False
+
+# The rest of your code remains the same...
+
+
     
     
 def show_register_page():
+    if 'reset_form' in st.session_state and st.session_state['reset_form']:
+        for key in ['email', 'first_name', 'last_name', 'username', 'password']:
+            st.session_state[key] = ''
+        st.session_state['reset_form'] = False
     with st.container():
         st.markdown("<div class='form-container'>", unsafe_allow_html=True)
         st.markdown("<div class='form-style'>", unsafe_allow_html=True)
@@ -149,28 +116,54 @@ def show_register_page():
         last_name = st.text_input("Last Name", key="last_name")
         username = st.text_input("Username", key="username")
         password = st.text_input("Password", type="password", key="password")
-        
+# Registration logic goes here
+# For example, you can check if the username exists and if not, insert the new user into the database.   
         if st.button('Register'):
-            # Registration logic goes here
-            # For example, you can check if the username exists and if not, insert the new user into the database.
-            import profilee
-            # If registration is successful, you might want to show the profile page
-            # show_profile_page()
+            query = "SELECT * FROM User WHERE username = %s OR email = %s"
+            cursor.execute(query, (username, email))
+            result = cursor.fetchone()
+            if result:
+                st.error("Username or email already exists.")
+                st.session_state['reset_form'] = True  # Set the flag to reset the form on next run
+                st.rerun()  # Rerun the app to reset the form
+            else:
+                insert_query = "INSERT INTO User (first_name, last_name, email, username, password) VALUES (%s, %s, %s, %s, %s)"
+                cursor.execute(insert_query, (first_name, last_name, email, username, password))
+                conn.commit()
+                query = "select * from User where username = %s"
+                cursor.execute(query,(username,))
+                result = cursor.fetchone()
+                userid = result[0]
+                st.success("Registration successful!")
+                st.session_state['user_signed_in'] = True
+                st.session_state['user_id'] = userid
+                st.balloons()
+                st.rerun()
         
         st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
-    
+
+if 'user_signed_in' not in st.session_state:
+    st.session_state['user_signed_in'] = False
+if 'user_id' not in st.session_state:
+    st.session_state['user_id'] = None
+
 # Navigation
 def main():
     st.sidebar.title("Navigation")
-    pages_dict = {
-        "Home": show_home_page,
-        "Sign In": show_signin_page,
-        "Register": show_register_page
-    }
-
+    if st.session_state['user_signed_in']:
+        # Show extended navigation after sign in or register
+        pages_dict = {"Home": show_home_page,
+                      "Booking": bk.show_booking_page,
+                      "Past Orders": po.show_past_orders_page,
+                      "Feedback" : fp.show_feedback_page}
+    else:
+        pages_dict = {"Home": show_home_page,
+                        "Sign In": show_signin_page,
+                        "Register": show_register_page}
     selected_page = st.sidebar.radio("Go to", list(pages_dict.keys()))
     pages_dict[selected_page]()
+
 
 if __name__ == "__main__":
     main()
