@@ -65,15 +65,13 @@ CREATE TABLE Orders (
 );
 
 CREATE TABLE Feedback (
-  FeedbackID INT PRIMARY KEY,
+  FeedbackID INT AUTO_INCREMENT PRIMARY KEY,
   CustomerID INT,
   Comments TEXT,
-  Quality_of_Service INT,
   Rating INT,
-  OrderID INT,
-  FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
-  FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+  FOREIGN KEY (CustomerID) REFERENCES User(UserID)
 );
+
 
 
 INSERT INTO User (first_name, last_name, email, username, password) VALUES 
@@ -104,7 +102,24 @@ INSERT INTO Items (ItemID, VendorID, Name, Price, Quantity, Cooking_Time) VALUES
 (3, 3, 'Sandwich', 4.00, 40, 7),
 (4, 1, 'Espresso', 2.50, 80, 3);
 
-select * from Orders;
+
+
+DROP TRIGGER IF EXISTS AfterOrderInsert;
+DELIMITER //
+
+CREATE TRIGGER  AfterOrderInsert
+AFTER INSERT ON Orders
+FOR EACH ROW
+BEGIN
+    UPDATE Items
+    SET Quantity = Quantity - NEW.Quantity
+    WHERE ItemID = NEW.ItemID;
+END; //
+
+DELIMITER ;
+
+select * from User;
+
 
 
 

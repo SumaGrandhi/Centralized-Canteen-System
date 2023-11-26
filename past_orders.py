@@ -1,11 +1,10 @@
 import streamlit as st
 import mysql.connector
 
-def show_past_orders_page():
-    user_id = st.session_state.get('user_id')
+def get_database_connection():
     db_host = 'localhost'
     db_user = 'root'
-    db_password = 'sqlroot321#'  
+    db_password = 'vid18par10@'  
     db_name = 'centralised_canteen_system'
 
     # Establishing a connection to the database
@@ -15,15 +14,26 @@ def show_past_orders_page():
         password=db_password,
         db=db_name
     )
+    return conn
+
+def show_past_orders_page():
+    # Check if the user is signed in and the user_id is stored in session state
+    if 'user_id' not in st.session_state or st.session_state['user_id'] is None:
+        st.error("Please sign in to view past orders.")
+        return  # Exit the function if user_id is not set
+
+    user_id = st.session_state['user_id']  # Retrieve the user_id from the session state
+
+    # Establishing a new connection to the database
+    conn = get_database_connection()
     cursor = conn.cursor()
+
     def get_past_orders(cursor, customer_id):
-        user_id = st.session_state.get('user_id')
         """ Fetch past orders for the given customer ID """
         sql = """
-        SELECT o.OrderID, o.Cooking_Time, o.Price, i.Name, e.Name
+        SELECT o.OrderID, o.Price, i.Name
         FROM Orders o
         JOIN Items i ON o.ItemID = i.ItemID
-        JOIN Employee e ON o.EmployeeID = e.EmployeeID
         WHERE o.CustomerID = %s
         """
         cursor.execute(sql, (customer_id,))
@@ -32,17 +42,16 @@ def show_past_orders_page():
 
     st.title("Past Orders")
 
-    # User input for Customer ID
-    customer_id = st.number_input("Enter Your Customer ID", min_value=1, step=1)
+    # Use the signed-in user's ID to fetch past orders
+    past_orders = get_past_orders(cursor, user_id)
+    if past_orders:
+        for order in past_orders:
+            st.write(f"Order ID: {order[0]}, Item: {order[2]}, Price: ${order[1]}")
+    else:
+        st.error("No past orders found for your account.")
 
-    if st.button("Show Past Orders"):
-        with conn.cursor() as cursor:
-            past_orders = get_past_orders(cursor, customer_id)
-            if past_orders:
-                st.write("Past Orders:")
-                for order in past_orders:
-                    st.write(f"Order ID: {order[0]}, Item: {order[3]}, Price: ${order[2]}, Cooking Time: {order[1]} mins, Handled by: {order[4]}")
-            else:
-                st.error("No past orders found for this Customer ID.")
-
+    # Close the cursor and the connection
+    cursor.close()
     conn.close()
+
+# If this is part of a larger Streamlit app, you may call this function from a navigation menu or similar.

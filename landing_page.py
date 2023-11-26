@@ -6,7 +6,7 @@ import mysql.connector
 
 db_host = 'localhost'
 db_user = 'root'
-db_password = 'sqlroot321#'  
+db_password = 'vid18par10@'  
 db_name = 'centralised_canteen_system'
 
 conn = mysql.connector.connect(
@@ -16,6 +16,124 @@ conn = mysql.connector.connect(
         db=db_name
 )
 cursor = conn.cursor()
+
+def set_bg_image_and_styles():
+    # Replace the existing function content with the CSS provided above
+    st.markdown(
+        """
+      
+<style>
+.stApp {
+    background-image: url("https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=2956&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Makes the background fixed during scrolling */
+}
+
+/* Style for the main header */
+.header {
+    position: absolute;
+    top: 1000%;  /* Center vertically */
+    left: 1000%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Ensure true centering */
+    text-align: center; /* Align text inside the header */
+    color: #000; /* White color for better visibility */
+    font-size: 10.5em; /* Adjust the font size as needed */
+}
+
+/* Additional global styles */
+body {
+    color: white; /* Make all text white for better contrast */
+    font-family: 'Arial', sans-serif; /* Use a common, clean font style */
+    font-family: 'Roboto', sans-serif;
+     /* Dark grey color for text for better visibility */
+    color: #000;
+}
+
+/* Style for navigation and content */
+.sidebar .sidebar-content {
+    
+    background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent white */
+    border-right: 2px solid rgba(255, 255, 255, 0.1); /* Slight white border */
+    color: #000;
+}
+
+/* Style for buttons and interactive elements */
+button {
+    background-color: #FF4B4B; /* A warm color for your buttons */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 12px; /* Rounded corners for buttons */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Subtle shadow for depth */
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Style adjustments for Streamlit components */
+.stTextInput, .stSelectbox, .stMultiselect {
+    background-color: #2C2C2C;
+    color: white;
+    border: 1px solid #4CAF50; /* A pleasant green */
+}
+
+.stTextInput:focus, .stSelectbox:focus, .stMultiselect:focus {
+    border-color: #76FF03; /* Brighter green on focus */
+}
+.stTextInput, .stSelectbox, .stMultiselect, .stSlider, .stRadio, .stCheckbox {
+    /* Your existing Streamlit component settings */
+    font-family: 'Roboto', sans-serif; /* Roboto font for components */
+}
+
+/* Style for sliders */
+.stSlider > div > div {
+    background-color: #FF4B4B; /* Warm color for the slider thumb */
+    background-color: black !important;
+}
+
+/* Style for markdown text */
+.markdown-text-container {
+    color: #ddd; /* Light grey for regular text */
+    font-family: 'Roboto', sans-serif; 
+}
+
+.sidebar .sidebar-content {
+    background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent white */
+    border-right: 2px solid rgba(255, 255, 255, 0.1); /* Slight white border */
+    color: #000;
+}
+.css-1t42vg8-StyledSlider > div {
+    background-color: black ;
+}
+
+/* Slider Thumb */
+.css-jrd7h2-StyledThumb {
+    background-color: black !important;
+}
+
+/* Style adjustments for sidebar widgets to make them stand out */
+.sidebar .stRadio > label, .sidebar .stCheckbox > label, .sidebar .stSelectbox > label, .sidebar .stButton > button {
+    background-color: rgba(255, 255, 255, 0.8); /* More opaque white for readability */
+    border-radius: 15px; /* Rounded corners for the widgets */
+    margin: 5px 0; /* Space out the widgets */
+    padding: 5px; /* Padding inside the widgets */
+    color: #000;
+}
+.sidebar .stRadio > label {
+    color: #000; /* Black for radio items text */
+}
+</style>
+
+       
+        """,
+        unsafe_allow_html=True
+    )
+set_bg_image_and_styles()
 
 def show_home_page():
     st.markdown("""
@@ -44,18 +162,27 @@ def show_home_page():
     st.write("Explore our menu and make orders easily with our app.")
 
 def authenticate_user(username, password):
-    # This function should only contain the logic to authenticate the user
-    # and should not contain any Streamlit widgets like st.button
-    query = "SELECT * FROM User WHERE username = %s AND password = %s"
+    # Establish a new database connection inside the function
+    conn = mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        db=db_name
+    )
+    cursor = conn.cursor()
+    
+    query = "SELECT UserID FROM User WHERE username = %s AND password = %s"
     cursor.execute(query, (username, password))
     result = cursor.fetchone()
-    userid = result[0]
-    #print("USER",userid,result)
+    cursor.close()  # Close the cursor after you're done with it
+    conn.close()  # Close the connection after you're done with it
+
     if result:
-        conn.close()
-        return True,userid
+        userid = result[0]
+        return True, userid
     else:
-        return False
+        return False, None
+
 
 def show_signin_page():
     # Check if we need to reset the form and clear session state
@@ -74,13 +201,12 @@ def show_signin_page():
             val, userid = authenticate_user(username, password)
             if val:
                 st.session_state['user_signed_in'] = True
-                conn.close()
-                st.rerun()
+                st.session_state['user_id'] = userid  # Make sure userid is not None here
+                st.experimental_rerun()
             else:
                 st.error("Authentication failed. Please try again.")
                 st.session_state['reset_signin_form'] = True
-                st.session_state['user_id'] = userid
-                #st.rerun()
+
 
         st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
@@ -123,14 +249,14 @@ def show_register_page():
                 cursor.execute(insert_query, (first_name, last_name, email, username, password))
                 conn.commit()
                 query = "select * from User where username = %s"
-                cursor.execute(query,username)
+                cursor.execute(query,(username,))
                 result = cursor.fetchone()
                 userid = result[0]
                 st.success("Registration successful!")
                 st.session_state['user_signed_in'] = True
                 st.session_state['user_id'] = userid
-                #st.balloons()
-                #st.rerun()
+                st.balloons()
+                st.rerun()
         
         st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
