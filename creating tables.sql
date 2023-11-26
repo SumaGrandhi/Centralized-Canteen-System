@@ -118,7 +118,7 @@ END; //
 
 DELIMITER ;
 
-select * from Users;
+select * from User;
 
 
 
